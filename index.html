@@ -3,737 +3,614 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lab Data Entry - pH/ORP</title>
+    <title>pH/ORP Lab Data Entry</title>
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #1a73e8;
-            --success: #0d9488;
-            --danger: #dc2626;
-            --warning: #ea580c;
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text: #1e293b;
-            --text-secondary: #64748b;
-            --border: #e2e8f0;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f7;
             padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 24px;
-            border-radius: 16px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 30px;
         }
 
         h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
+            color: #1d1d1f;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: #1d1d1f;
+            font-size: 24px;
+            margin-bottom: 20px;
+            margin-top: 30px;
         }
 
         .subtitle {
-            opacity: 0.9;
-            font-size: 15px;
+            color: #86868b;
+            font-size: 16px;
+            margin-bottom: 30px;
         }
 
-        .card {
-            background: var(--surface);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            border: 1px solid var(--border);
-        }
-
-        .step-header {
+        .step-indicator {
             display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--border);
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
         }
 
-        .step-number {
-            width: 32px;
-            height: 32px;
+        .step {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            background: var(--primary);
-            color: white;
+            background: #e5e5e7;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
-            font-size: 16px;
+            font-weight: 600;
+            color: #86868b;
+            transition: all 0.3s;
         }
 
-        .step-title {
+        .step.active {
+            background: #007aff;
+            color: white;
+        }
+
+        .step.completed {
+            background: #34c759;
+            color: white;
+        }
+
+        /* Experiment Selection */
+        .experiment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .experiment-item {
+            border: 2px solid #e5e5e7;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .experiment-item:active {
+            transform: scale(0.98);
+        }
+
+        .experiment-item.selected {
+            border-color: #007aff;
+            background: #f0f7ff;
+        }
+
+        .experiment-checkbox {
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            border: 2px solid #c7c7cc;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .experiment-item.selected .experiment-checkbox {
+            background: #007aff;
+            border-color: #007aff;
+        }
+
+        .experiment-checkbox::after {
+            content: '✓';
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .experiment-item.selected .experiment-checkbox::after {
+            opacity: 1;
+        }
+
+        .experiment-details {
+            flex: 1;
+        }
+
+        .experiment-name {
             font-size: 18px;
             font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 5px;
         }
 
-        .button-group {
+        .experiment-meta {
+            font-size: 14px;
+            color: #86868b;
+        }
+
+        /* Flask Selection */
+        .flask-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 12px;
+        }
+
+        .flask-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #1d1d1f;
+        }
+
+        .flask-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
             gap: 12px;
-            margin-top: 16px;
         }
 
-        button, .button {
-            padding: 16px 24px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
+        .flask-item {
+            aspect-ratio: 1;
+            border: 2px solid #e5e5e7;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            text-align: center;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            touch-action: manipulation;
+            background: white;
         }
 
-        button:active {
+        .flask-item:active {
+            transform: scale(0.95);
+        }
+
+        .flask-item.selected {
+            background: #007aff;
+            border-color: #007aff;
+            color: white;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:active {
             transform: scale(0.98);
         }
 
         .btn-primary {
-            background: var(--primary);
+            background: #007aff;
             color: white;
         }
 
-        .btn-primary:hover {
-            background: #1557b0;
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #0f766e;
+        .btn-primary:disabled {
+            background: #c7c7cc;
+            cursor: not-allowed;
         }
 
         .btn-secondary {
-            background: var(--border);
-            color: var(--text);
+            background: #e5e5e7;
+            color: #1d1d1f;
         }
 
-        .btn-secondary:hover {
-            background: #cbd5e1;
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .file-input-label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 16px 24px;
-            background: var(--primary);
-            color: white;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .file-input-label:hover {
-            background: #1557b0;
-        }
-
-        #imagePreview {
-            margin-top: 16px;
-            border-radius: 8px;
-            max-width: 100%;
-            height: auto;
-            display: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            -webkit-user-select: text; /* Allow text selection on iOS */
-            user-select: text;
-        }
-
-        #ocrResult {
-            margin-top: 16px;
-            padding: 16px;
-            background: #f1f5f9;
-            border-radius: 8px;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 14px;
-            white-space: pre-wrap;
-            display: none;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 16px;
-            font-size: 14px;
-        }
-
-        thead {
-            background: #f8fafc;
-            position: sticky;
-            top: 0;
-        }
-
-        th {
-            padding: 12px 8px;
-            text-align: left;
-            font-weight: 600;
-            border-bottom: 2px solid var(--border);
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-        }
-
-        td {
-            padding: 10px 8px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        td input {
-            width: 100%;
-            padding: 6px 8px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        td input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
-        }
-
-        .delete-btn {
-            padding: 6px 12px;
-            background: var(--danger);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .status {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-top: 16px;
-            font-weight: 500;
-            display: none;
-        }
-
-        .status.success {
-            background: #d1fae5;
-            color: #065f46;
-            display: block;
-        }
-
-        .status.error {
-            background: #fee2e2;
-            color: #991b1b;
-            display: block;
-        }
-
-        .status.info {
-            background: #dbeafe;
-            color: #1e40af;
-            display: block;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
+        /* Loading State */
         .loading {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 3px solid rgba(255,255,255,.3);
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e5e5e7;
+            border-top-color: #007aff;
             border-radius: 50%;
-            border-top-color: white;
-            animation: spin 0.8s linear infinite;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        .table-container {
-            overflow-x: auto;
-            max-height: 500px;
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Select All Button */
+        .select-all-btn {
+            padding: 12px 20px;
+            background: #f0f7ff;
+            border: 2px solid #007aff;
+            color: #007aff;
             border-radius: 8px;
-            border: 1px solid var(--border);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 15px;
+            width: 100%;
         }
 
-        .info-box {
-            background: #e0f2fe;
-            border: 2px solid #0ea5e9;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-        }
-
-        .info-box strong {
-            color: #075985;
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 12px;
-            }
-
-            .button-group {
-                grid-template-columns: 1fr;
-            }
-
-            table {
-                font-size: 12px;
-            }
-
-            th, td {
-                padding: 8px 4px;
-            }
+        .select-all-btn:active {
+            transform: scale(0.98);
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>📊 Lab Data Entry</h1>
-        <div class="subtitle">pH & ORP Measurements - CSV Export</div>
-    </div>
-
-    <div class="card">
-        <div class="info-box">
-            <strong>📁 Workflow:</strong> Parse data → Export CSV → Save to Google Drive folder → Auto-imported by Apps Script
-        </div>
-    </div>
-
-    <!-- Step 1: Upload Photo -->
-    <div class="card">
-        <div class="step-header">
-            <div class="step-number">1</div>
-            <div class="step-title">Upload Notebook Photo</div>
-        </div>
-        <div>
-            <input type="file" id="fileInput" accept="image/*" capture="environment">
-            <label for="fileInput" class="file-input-label">
-                📸 Take Photo / Choose from Library
-            </label>
-            <img id="imagePreview" alt="Notebook photo - long-press to use Live Text">
-            <div style="margin-top: 12px; padding: 12px; background: #f0f9ff; border-radius: 8px; display: none;" id="imageHelp">
-                <strong>📱 How to use Live Text:</strong><br>
-                1. Long-press directly on the photo above<br>
-                2. Text will become selectable<br>
-                3. Tap "Select All" or manually select measurements<br>
-                4. Tap "Copy"<br>
-                5. Then click "Parse Data" button below
+    <div class="container">
+        <!-- File Upload State -->
+        <div id="uploadState">
+            <h1>pH/ORP Lab Data Entry</h1>
+            <p class="subtitle">Select your experiment list CSV file to begin</p>
+            
+            <div style="text-align: center; padding: 40px 0;">
+                <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+                <button class="btn btn-primary" id="uploadBtn" style="width: 100%; max-width: 400px; margin: 0 auto;">
+                    📁 Select CSV File
+                </button>
+                <p style="margin-top: 20px; color: #86868b; font-size: 14px;">
+                    Download master_experiment_list.csv from Google Drive to your iPad, then select it here
+                </p>
             </div>
-            <div id="ocrResult"></div>
-            <div id="uploadStatus" class="status"></div>
         </div>
-    </div>
 
-    <!-- Step 2: Parse Data -->
-    <div class="card hidden" id="parseCard">
-        <div class="step-header">
-            <div class="step-number">2</div>
-            <div class="step-title">Parse & Review Data</div>
+        <!-- Loading State -->
+        <div id="loadingState" class="loading hidden">
+            <div class="loading-spinner"></div>
+            <p>Loading experiments...</p>
         </div>
-        <div>
-            <p style="margin-bottom: 12px; color: var(--text-secondary);">Use iPad Live Text to copy measurements from the image, then click Parse.</p>
+
+        <!-- Error State -->
+        <div id="errorState" class="hidden error">
+            <strong>Error:</strong> <span id="errorMessage"></span>
+        </div>
+
+        <!-- Step 1: Experiment Selection -->
+        <div id="step1" class="hidden">
+            <h1>Session Setup</h1>
+            <p class="subtitle">Select which experiments you're measuring today</p>
+            
+            <div class="step-indicator">
+                <div class="step active">1</div>
+                <div class="step">2</div>
+                <div class="step">3</div>
+            </div>
+
+            <div id="experimentList" class="experiment-list"></div>
+
             <div class="button-group">
-                <button id="parseButton" class="btn-primary">
-                    🔄 Parse Data
-                </button>
-                <button id="addRowButton" class="btn-secondary">
-                    ➕ Add Row Manually
+                <button class="btn btn-primary" id="continueToFlasks" disabled>
+                    Continue to Flask Selection
                 </button>
             </div>
-            <div id="parseStatus" class="status"></div>
         </div>
-    </div>
 
-    <!-- Step 3: Review Table -->
-    <div class="card hidden" id="tableCard">
-        <div class="step-header">
-            <div class="step-number">3</div>
-            <div class="step-title">Review & Export</div>
+        <!-- Step 2: Flask Selection -->
+        <div id="step2" class="hidden">
+            <h1>Flask Selection</h1>
+            <p class="subtitle">Select which flasks to measure for each experiment</p>
+            
+            <div class="step-indicator">
+                <div class="step completed">1</div>
+                <div class="step active">2</div>
+                <div class="step">3</div>
+            </div>
+
+            <div id="flaskSections"></div>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" id="backToExperiments">Back</button>
+                <button class="btn btn-primary" id="startMeasurements" disabled>
+                    Start Measurements
+                </button>
+            </div>
         </div>
-        <div class="table-container">
-            <table id="dataTable">
-                <thead>
-                    <tr>
-                        <th>Project</th>
-                        <th>Ore</th>
-                        <th>Test Type</th>
-                        <th>Flask #</th>
-                        <th>pH</th>
-                        <th>ORP</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                </tbody>
-            </table>
+
+        <!-- Step 3: Measurements (placeholder for now) -->
+        <div id="step3" class="hidden">
+            <h1>Measurements</h1>
+            <p class="subtitle">Enter pH and ORP values</p>
+            
+            <div class="step-indicator">
+                <div class="step completed">1</div>
+                <div class="step completed">2</div>
+                <div class="step active">3</div>
+            </div>
+
+            <p style="padding: 40px 0; text-align: center; color: #86868b;">
+                Measurement entry screen coming next...
+            </p>
+
+            <div class="button-group">
+                <button class="btn btn-secondary" id="backToFlasks">Back</button>
+            </div>
         </div>
-        <div class="button-group" style="margin-top: 20px;">
-            <button id="exportButton" class="btn-success">
-                💾 Export CSV to Drive
-            </button>
-            <button id="clearButton" class="btn-danger">
-                🗑️ Clear All
-            </button>
-        </div>
-        <div id="exportStatus" class="status"></div>
     </div>
 
     <script>
-        // DOM Elements
-        const elements = {
-            fileInput: document.getElementById('fileInput'),
-            imagePreview: document.getElementById('imagePreview'),
-            ocrResult: document.getElementById('ocrResult'),
-            parseCard: document.getElementById('parseCard'),
-            tableCard: document.getElementById('tableCard'),
-            parseButton: document.getElementById('parseButton'),
-            addRowButton: document.getElementById('addRowButton'),
-            exportButton: document.getElementById('exportButton'),
-            clearButton: document.getElementById('clearButton'),
-            tableBody: document.getElementById('tableBody'),
-            uploadStatus: document.getElementById('uploadStatus'),
-            parseStatus: document.getElementById('parseStatus'),
-            exportStatus: document.getElementById('exportStatus')
-        };
+        // State
+        let experiments = [];
+        let selectedExperiments = [];
+        let flaskSelections = {};
 
-        let parsedData = [];
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
 
-        // File Upload & OCR
-        elements.fileInput.addEventListener('change', handleFileSelect);
+        function init() {
+            // Set up file upload handler
+            document.getElementById('uploadBtn').addEventListener('click', () => {
+                document.getElementById('csvFileInput').click();
+            });
+            
+            document.getElementById('csvFileInput').addEventListener('change', handleFileSelect);
+        }
 
+        // Handle file selection
         async function handleFileSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
-
-            // Validate it's an image
-            if (!file.type.startsWith('image/')) {
-                showStatus(elements.uploadStatus, 'error', 'Please select an image file.');
+            
+            if (!file.name.endsWith('.csv')) {
+                showError('Please select a CSV file');
                 return;
             }
-
-            showStatus(elements.uploadStatus, 'info', 'Loading image...');
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                // Create image element to ensure it loads
-                const img = new Image();
-                img.onload = function() {
-                    elements.imagePreview.src = e.target.result;
-                    elements.imagePreview.style.display = 'block';
-                    elements.imagePreview.style.maxWidth = '100%';
-                    elements.imagePreview.style.height = 'auto';
-                    
-                    // Show help text
-                    document.getElementById('imageHelp').style.display = 'block';
-                    
-                    showStatus(elements.uploadStatus, 'success', '✓ Image loaded! Long-press on the photo below to use Live Text and copy your measurements.');
-                    elements.parseCard.classList.remove('hidden');
-                };
-                img.onerror = function() {
-                    showStatus(elements.uploadStatus, 'error', 'Failed to load image. Please try again.');
-                };
-                img.src = e.target.result;
-            };
-            reader.onerror = function() {
-                showStatus(elements.uploadStatus, 'error', 'Failed to read file. Please try again.');
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Parsing Logic
-        elements.parseButton.addEventListener('click', parseData);
-
-        function parseData() {
-            const ocrText = prompt('Paste the text you copied from the image using Live Text:');
-            if (!ocrText) return;
-
-            elements.ocrResult.textContent = ocrText;
-            elements.ocrResult.style.display = 'block';
-
-            showStatus(elements.parseStatus, 'info', 'Parsing data...');
-
             try {
-                parsedData = parseNotebookData(ocrText);
+                document.getElementById('uploadState').classList.add('hidden');
+                document.getElementById('loadingState').classList.remove('hidden');
                 
-                if (parsedData.length === 0) {
-                    showStatus(elements.parseStatus, 'error', 'No valid data found. Please check the format.');
-                    return;
-                }
-
-                renderTable();
-                elements.tableCard.classList.remove('hidden');
-                showStatus(elements.parseStatus, 'success', `✓ Successfully parsed ${parsedData.length} measurements`);
+                const csvText = await file.text();
+                parseCSV(csvText);
+                showStep(1);
             } catch (error) {
-                showStatus(elements.parseStatus, 'error', 'Error parsing data: ' + error.message);
+                showError('Failed to read file: ' + error.message);
             }
         }
 
-        function parseNotebookData(text) {
-            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-            const results = [];
-            let currentExperiment = null;
-
-            for (const line of lines) {
-                // Skip horizontal lines
-                if (line.match(/^[-_=]+$/)) continue;
-
-                // Try to parse experiment tag
-                // Matches: P4-02/WT, P999/03/KT, P4-02 WT, etc.
-                const tagMatch = line.match(/([A-Z]\d+)[-\s/]*(\d+)?[-\s/]*(WT|KT|AT|BT)/i);
-                if (tagMatch) {
-                    currentExperiment = {
-                        project: tagMatch[1],
-                        ore: tagMatch[2] || '',
-                        testType: tagMatch[3].toUpperCase()
+        // Parse CSV data
+        function parseCSV(csvText) {
+            const lines = csvText.trim().split('\n');
+            const headers = lines[0].split(',');
+            
+            experiments = lines.slice(1)
+                .filter(line => line.trim()) // Skip empty lines
+                .map(line => {
+                    const values = line.split(',');
+                    const exp = {
+                        project: values[0],
+                        ore: values[1],
+                        testType: values[2],
+                        flaskCount: parseInt(values[3]) || 0,
+                        daysSince: parseInt(values[4]) || 999,
+                        flasks: []
                     };
-                    continue;
-                }
-
-                // Try to parse measurement line (pH ORP Flask)
-                // Matches various formats: "3.54 312 F1", "3.54 312 F1", etc.
-                const measureMatch = line.match(/(\d+\.?\d*)\s+(\d+)\s+F(\d+)/i);
-                if (measureMatch && currentExperiment) {
-                    results.push({
-                        project: currentExperiment.project,
-                        ore: currentExperiment.ore,
-                        testType: currentExperiment.testType,
-                        flask: measureMatch[3],
-                        pH: measureMatch[1],
-                        orp: measureMatch[2]
-                    });
-                }
-            }
-
-            return results;
-        }
-
-        // Table Rendering
-        function renderTable() {
-            elements.tableBody.innerHTML = '';
-            
-            parsedData.forEach((row, index) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><input type="text" value="${row.project}" data-index="${index}" data-field="project"></td>
-                    <td><input type="text" value="${row.ore}" data-index="${index}" data-field="ore"></td>
-                    <td><input type="text" value="${row.testType}" data-index="${index}" data-field="testType"></td>
-                    <td><input type="text" value="${row.flask}" data-index="${index}" data-field="flask"></td>
-                    <td><input type="number" step="0.01" value="${row.pH}" data-index="${index}" data-field="pH"></td>
-                    <td><input type="number" value="${row.orp}" data-index="${index}" data-field="orp"></td>
-                    <td><button class="delete-btn" onclick="deleteRow(${index})">Delete</button></td>
-                `;
-                elements.tableBody.appendChild(tr);
-            });
-
-            // Add event listeners for editing
-            document.querySelectorAll('#tableBody input').forEach(input => {
-                input.addEventListener('change', function() {
-                    const index = parseInt(this.dataset.index);
-                    const field = this.dataset.field;
-                    parsedData[index][field] = this.value;
-                });
-            });
-        }
-
-        window.deleteRow = function(index) {
-            parsedData.splice(index, 1);
-            renderTable();
-            if (parsedData.length === 0) {
-                elements.tableCard.classList.add('hidden');
-            }
-        };
-
-        elements.addRowButton.addEventListener('click', () => {
-            parsedData.push({
-                project: '',
-                ore: '',
-                testType: '',
-                flask: '',
-                pH: '',
-                orp: ''
-            });
-            renderTable();
-            elements.tableCard.classList.remove('hidden');
-        });
-
-        // Export to CSV
-        elements.exportButton.addEventListener('click', exportToCSV);
-
-        function exportToCSV() {
-            if (parsedData.length === 0) {
-                showStatus(elements.exportStatus, 'error', 'No data to export!');
-                return;
-            }
-
-            showStatus(elements.exportStatus, 'info', 'Generating CSV...');
-
-            try {
-                const timestamp = new Date().toISOString();
-                const rows = parsedData.map(row => formatRowForCSV(row, timestamp));
-                
-                // Create CSV content
-                const headers = [
-                    'Timestamp', 'Test Type', 'Project', 'Ore',
-                    'WT pH', 'AT pH', 'BT pH', 'KT pH',
-                    'KT Volume Acid Added', 'KT pH Adjusted',
-                    'AT Flask Number', 'BT Flask Number', 'WT Flask Number', 'KT Flask Number',
-                    'AT ORP', 'BT ORP', 'WT ORP', 'KT ORP'
-                ];
-                
-                let csvContent = headers.join(',') + '\n';
-                rows.forEach(row => {
-                    csvContent += row.join(',') + '\n';
-                });
-
-                // Create blob and download
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const filename = `Lab_Data_${new Date().toISOString().split('T')[0]}_${Date.now()}.csv`;
-                
-                // Trigger download
-                const link = document.createElement('a');
-                if (link.download !== undefined) {
-                    const url = URL.createObjectURL(blob);
-                    link.setAttribute('href', url);
-                    link.setAttribute('download', filename);
-                    link.style.visibility = 'hidden';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                }
-
-                showStatus(elements.exportStatus, 'success', `✓ CSV exported! Save it to your Google Drive folder. (${parsedData.length} measurements)`);
-                
-                // Optional: Clear data after export
-                setTimeout(() => {
-                    if (confirm('Data exported successfully! Clear the form for next batch?')) {
-                        parsedData = [];
-                        renderTable();
-                        elements.tableCard.classList.add('hidden');
-                        elements.parseCard.classList.add('hidden');
-                        elements.imagePreview.style.display = 'none';
-                        elements.ocrResult.style.display = 'none';
-                        elements.fileInput.value = '';
+                    
+                    // Get all flask values from remaining columns
+                    for (let i = 5; i < values.length; i++) {
+                        if (values[i] && values[i].trim()) {
+                            exp.flasks.push(values[i].trim());
+                        }
                     }
-                }, 1000);
+                    
+                    return exp;
+                });
+            
+            console.log('Loaded experiments:', experiments);
+        }
 
-            } catch (error) {
-                showStatus(elements.exportStatus, 'error', 'Export failed: ' + error.message);
+        // Show specific step
+        function showStep(step) {
+            document.getElementById('uploadState').classList.add('hidden');
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.add('hidden');
+            
+            if (step === 1) {
+                renderExperimentList();
+                document.getElementById('step1').classList.remove('hidden');
+            } else if (step === 2) {
+                renderFlaskSelection();
+                document.getElementById('step2').classList.remove('hidden');
+            } else if (step === 3) {
+                document.getElementById('step3').classList.remove('hidden');
             }
         }
 
-        function formatRowForCSV(row, timestamp) {
-            // Column order matches your sheet
-            const baseRow = [
-                timestamp,
-                row.testType,
-                row.project,
-                row.ore,
-                '', // WT pH
-                '', // AT pH
-                '', // BT pH
-                '', // KT pH
-                '', // KT Volume Acid Added
-                '', // KT pH Adjusted
-                '', // AT Flask Number
-                '', // BT Flask Number
-                '', // WT Flask Number
-                '', // KT Flask Number
-                '', // AT ORP
-                '', // BT ORP
-                '', // WT ORP
-                ''  // KT ORP
-            ];
-
-            // Fill in the appropriate columns based on test type
-            switch (row.testType) {
-                case 'WT':
-                    baseRow[4] = row.pH;      // WT pH
-                    baseRow[12] = row.flask;  // WT Flask Number
-                    baseRow[16] = row.orp;    // WT ORP
-                    break;
-                case 'AT':
-                    baseRow[5] = row.pH;      // AT pH
-                    baseRow[10] = row.flask;  // AT Flask Number
-                    baseRow[14] = row.orp;    // AT ORP
-                    break;
-                case 'BT':
-                    baseRow[6] = row.pH;      // BT pH
-                    baseRow[11] = row.flask;  // BT Flask Number
-                    baseRow[15] = row.orp;    // BT ORP
-                    break;
-                case 'KT':
-                    baseRow[7] = row.pH;      // KT pH
-                    baseRow[13] = row.flask;  // KT Flask Number
-                    baseRow[17] = row.orp;    // KT ORP
-                    break;
-            }
-
-            return baseRow;
+        // Render experiment selection list
+        function renderExperimentList() {
+            const container = document.getElementById('experimentList');
+            container.innerHTML = '';
+            
+            experiments.forEach((exp, index) => {
+                const item = document.createElement('div');
+                item.className = 'experiment-item';
+                item.innerHTML = `
+                    <div class="experiment-checkbox"></div>
+                    <div class="experiment-details">
+                        <div class="experiment-name">
+                            ${exp.project} - Ore ${exp.ore} - ${exp.testType}
+                        </div>
+                        <div class="experiment-meta">
+                            ${exp.flaskCount} flasks • Measured ${exp.daysSince} days ago
+                        </div>
+                    </div>
+                `;
+                
+                item.addEventListener('click', () => toggleExperiment(index, item));
+                container.appendChild(item);
+            });
         }
 
-        elements.clearButton.addEventListener('click', () => {
-            if (confirm('Are you sure you want to clear all data?')) {
-                parsedData = [];
-                renderTable();
-                elements.tableCard.classList.add('hidden');
+        // Toggle experiment selection
+        function toggleExperiment(index, element) {
+            const exp = experiments[index];
+            const expId = `${exp.project}_${exp.ore}_${exp.testType}`;
+            
+            const selectedIndex = selectedExperiments.findIndex(e => 
+                `${e.project}_${e.ore}_${e.testType}` === expId
+            );
+            
+            if (selectedIndex >= 0) {
+                selectedExperiments.splice(selectedIndex, 1);
+                element.classList.remove('selected');
+            } else {
+                selectedExperiments.push(exp);
+                element.classList.add('selected');
             }
+            
+            document.getElementById('continueToFlasks').disabled = selectedExperiments.length === 0;
+        }
+
+        // Render flask selection
+        function renderFlaskSelection() {
+            const container = document.getElementById('flaskSections');
+            container.innerHTML = '';
+            
+            selectedExperiments.forEach(exp => {
+                const expId = `${exp.project}_${exp.ore}_${exp.testType}`;
+                
+                const section = document.createElement('div');
+                section.className = 'flask-section';
+                
+                const title = document.createElement('div');
+                title.className = 'flask-section-title';
+                title.textContent = `${exp.project} - Ore ${exp.ore} - ${exp.testType}`;
+                section.appendChild(title);
+                
+                // Select All button
+                const selectAllBtn = document.createElement('button');
+                selectAllBtn.className = 'select-all-btn';
+                selectAllBtn.textContent = 'Select All Flasks';
+                selectAllBtn.addEventListener('click', () => selectAllFlasks(expId, exp.flasks));
+                section.appendChild(selectAllBtn);
+                
+                const grid = document.createElement('div');
+                grid.className = 'flask-grid';
+                grid.id = `flask-grid-${expId}`;
+                
+                exp.flasks.forEach(flask => {
+                    const flaskItem = document.createElement('div');
+                    flaskItem.className = 'flask-item';
+                    flaskItem.textContent = flask;
+                    flaskItem.dataset.flask = flask;
+                    flaskItem.dataset.expId = expId;
+                    
+                    flaskItem.addEventListener('click', () => toggleFlask(expId, flask, flaskItem));
+                    grid.appendChild(flaskItem);
+                });
+                
+                section.appendChild(grid);
+                container.appendChild(section);
+            });
+        }
+
+        // Toggle flask selection
+        function toggleFlask(expId, flask, element) {
+            if (!flaskSelections[expId]) {
+                flaskSelections[expId] = [];
+            }
+            
+            const index = flaskSelections[expId].indexOf(flask);
+            if (index >= 0) {
+                flaskSelections[expId].splice(index, 1);
+                element.classList.remove('selected');
+            } else {
+                flaskSelections[expId].push(flask);
+                element.classList.add('selected');
+            }
+            
+            updateStartButton();
+        }
+
+        // Select all flasks for an experiment
+        function selectAllFlasks(expId, flasks) {
+            flaskSelections[expId] = [...flasks];
+            
+            const grid = document.getElementById(`flask-grid-${expId}`);
+            Array.from(grid.children).forEach(item => {
+                item.classList.add('selected');
+            });
+            
+            updateStartButton();
+        }
+
+        // Update start button state
+        function updateStartButton() {
+            const hasSelections = Object.values(flaskSelections).some(arr => arr.length > 0);
+            document.getElementById('startMeasurements').disabled = !hasSelections;
+        }
+
+        // Show error
+        function showError(message) {
+            document.getElementById('uploadState').classList.add('hidden');
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorState').classList.remove('hidden');
+            
+            // Show upload button again after error
+            setTimeout(() => {
+                document.getElementById('errorState').classList.add('hidden');
+                document.getElementById('uploadState').classList.remove('hidden');
+            }, 3000);
+        }
+
+        // Button handlers
+        document.getElementById('continueToFlasks').addEventListener('click', () => showStep(2));
+        document.getElementById('backToExperiments').addEventListener('click', () => showStep(1));
+        document.getElementById('startMeasurements').addEventListener('click', () => {
+            console.log('Selected experiments:', selectedExperiments);
+            console.log('Flask selections:', flaskSelections);
+            showStep(3);
         });
-
-        // Helper Functions
-        function showStatus(element, type, message) {
-            element.className = `status ${type}`;
-            element.textContent = message;
-            element.style.display = 'block';
-
-            if (type === 'success') {
-                setTimeout(() => {
-                    element.style.display = 'none';
-                }, 5000);
-            }
-        }
+        document.getElementById('backToFlasks').addEventListener('click', () => showStep(2));
     </script>
 </body>
 </html>
