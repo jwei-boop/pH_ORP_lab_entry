@@ -988,14 +988,14 @@
             // Mark flask as completed
             progressTracking[probe][expId].push(flask);
             
-            // Clear value and flask selection
+            // Clear value and flask selection BUT keep dropdown enabled
             valueDisplay.textContent = 'Tap to enter';
             valueDisplay.classList.add('placeholder');
             flaskSelect.value = '';
             
             // Update UI
             updateProgressIndicator(probe, exp);
-            handleExperimentChange(probe, expIndex); // Refresh available flasks
+            handleExperimentChange(probe, expIndex); // Refresh available flasks - this will re-enable dropdown
             updateSaveButtonState(probe);
             
             // Show feedback
@@ -1245,7 +1245,19 @@
             document.body.removeChild(link);
             
             console.log('Exported measurements:', measurements.length);
-            alert(`Successfully exported ${measurements.length} measurements!\n\nFile: pH_ORP_data_${timestamp}.csv\n\nNow upload this file to your Google Drive folder.`);
+            
+            // iPad-specific download instructions
+            const fileName = `pH_ORP_data_${timestamp}.csv`;
+            alert(`✓ Successfully exported ${measurements.length} measurements!\n\n` +
+                  `File: ${fileName}\n\n` +
+                  `📱 On iPad, the file was saved to:\n` +
+                  `Files app → On My iPad → Downloads\n` +
+                  `(or iCloud Drive → Downloads)\n\n` +
+                  `Next steps:\n` +
+                  `1. Open Files app\n` +
+                  `2. Find ${fileName} in Downloads\n` +
+                  `3. Upload to your Google Drive folder\n` +
+                  `4. Your Apps Script will auto-import it!`);
         }
     </script>
 </body>
