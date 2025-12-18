@@ -842,16 +842,17 @@
         }
 
         function handleExperimentChange(probe, expIndex) {
-            if (!expIndex) {
-                document.getElementById(`${probe}FlaskSelect`).disabled = true;
-                document.getElementById(`${probe}FlaskSelect`).innerHTML = '<option value="">Select flask...</option>';
+            const flaskSelect = document.getElementById(`${probe}FlaskSelect`);
+            
+            if (!expIndex && expIndex !== 0) {
+                flaskSelect.disabled = true;
+                flaskSelect.innerHTML = '<option value="">Select flask...</option>';
                 updateProgressIndicator(probe, null);
                 return;
             }
             
             const exp = selectedExperiments[parseInt(expIndex)];
             const expId = `${exp.project}_${exp.ore}_${exp.testType}`;
-            const flaskSelect = document.getElementById(`${probe}FlaskSelect`);
             
             // Populate flask dropdown with available flasks
             flaskSelect.innerHTML = '<option value="">Select flask...</option>';
@@ -863,6 +864,7 @@
                 }
             });
             
+            // IMPORTANT: Always enable the dropdown when there's an experiment selected
             flaskSelect.disabled = false;
             
             // Update progress indicator
@@ -1159,7 +1161,7 @@
         document.getElementById('finishSession').addEventListener('click', exportToCSV);
 
         // Export measurements to CSV
-        function exportToCSV() {
+        async function exportToCSV() {
             if (measurements.length === 0) {
                 alert('No measurements to export!');
                 return;
@@ -1230,34 +1232,102 @@
                 csvContent += values.join(',') + '\n';
             });
             
-            // Create download link
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            
             const timestamp = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-            link.setAttribute('href', url);
-            link.setAttribute('download', `pH_ORP_data_${timestamp}.csv`);
-            link.style.visibility = 'hidden';
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            console.log('Exported measurements:', measurements.length);
-            
-            // iPad-specific download instructions
             const fileName = `pH_ORP_data_${timestamp}.csv`;
-            alert(`✓ Successfully exported ${measurements.length} measurements!\n\n` +
-                  `File: ${fileName}\n\n` +
-                  `📱 On iPad, the file was saved to:\n` +
-                  `Files app → On My iPad → Downloads\n` +
-                  `(or iCloud Drive → Downloads)\n\n` +
-                  `Next steps:\n` +
-                  `1. Open Files app\n` +
-                  `2. Find ${fileName} in Downloads\n` +
-                  `3. Upload to your Google Drive folder\n` +
-                  `4. Your Apps Script will auto-import it!`);
+            
+            // Try iOS Share Sheet (Web Share API with files)
+            if (navigator.share && navigator.canShare) {
+                try {
+                    const blob = new Blob([csvContent], { type: 'text/csv' });
+                    const file = new File([blob], fileName, { type: 'text/csv' });
+                    
+                    // Check if we can share files
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            files: [file],
+                            title: 'pH/ORP Lab Data',
+                            text: `Lab measurements - ${measurements.length} records`
+                        });
+                        
+                        console.log('Successfully shared via Share Sheet');
+                        return;
+                    }
+                } catch (error) {
+                    console.log('Share Sheet error:', error);
+                    // Fall through to fallback methods
+                }
+            }
+            
+            // Fallback: Try standard download
+            try {
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                
+                link.setAttribute('href', url);
+                link.setAttribute('download', fileName);
+                link.style.display = 'none';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+                
+                alert(`✓ Exported ${measurements.length} measurements!\n\n` +
+                      `File: ${fileName}\n\n` +
+                      `Check your Downloads folder or tap Share icon to save to Files/Drive.`);
+                
+            } catch (error) {
+                // Final fallback: Copy to clipboard
+                console.error('All export methods failed:', error);
+                copyToClipboard(csvContent);
+                alert(`⚠️ Automatic export not available.\n\n` +
+                      `✓ CSV data copied to clipboard!\n\n` +
+                      `To save:\n` +
+                      `1. Open Files app\n` +
+                      `2. Create new file\n` +
+                      `3. Paste\n` +
+                      `4. Save as ${fileName}`);
+            }
+        }
+        
+        function copyToClipboard(text) {
+            // Try modern clipboard API first
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).catch(err => {
+                    fallbackCopyToClipboard(text);
+                });
+            } else {
+                fallbackCopyToClipboard(text);
+            }
+        }
+        
+        function fallbackCopyToClipboard(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.top = '0';
+            textArea.style.left = '0';
+            textArea.style.width = '2em';
+            textArea.style.height = '2em';
+            textArea.style.padding = '0';
+            textArea.style.border = 'none';
+            textArea.style.outline = 'none';
+            textArea.style.boxShadow = 'none';
+            textArea.style.background = 'transparent';
+            
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+            }
+            
+            document.body.removeChild(textArea);
         }
     </script>
 </body>
